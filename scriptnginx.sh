@@ -13,6 +13,4 @@ else
   arquivo_saida="nginx_offline.log"
 fi
 
-echo "$datahora - $servico - $status - $mensagem" >> "$arquivo_saida"
-
-
+echo "$datahora - $servico - $status - $mensagem" >> "/home/ec2-user/lablinux/$arquivo_saida"
