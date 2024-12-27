@@ -236,3 +236,167 @@ Para garantir que meu script estivesse salvo e versionado corretamente, configur
    git push -u origin main
    ```
 ---
+## Parte 3: Subindo o Projeto para uma Instância EC2 na AWS
+
+### Pré-requisitos
+1. **Conta AWS**: Certifiquei-me de ter uma conta válida na AWS e acessei o [AWS Console](https://aws.amazon.com/console/) para gerenciar minha conta.
+2. **Chave de Acesso**: Gerei uma chave PEM existente para me conectar à instância EC2.
+3. **Git Instalado na Instância EC2**: Confirmei que o Git estava instalado na instância para clonar o repositório.
+
+### Passos para Configuração
+
+#### 1. Criar e Configurar a Instância EC2
+1. Acessei o console da AWS e naveguei até **EC2**. Cliquei em **Launch Instance**.
+2. Escolhi uma AMI (Amazon Machine Image), como **Amazon Linux**.
+3. Configurei o armazenamento e o grupo de segurança:
+   - Incluí uma regra para permitir conexões SSH na porta 22.
+   - Adicionei regras para tráfego HTTP/HTTPS nas portas 80 e 443.
+4. Baixei a chave PEM ao criar a instância ou usei uma existente.
+5. Finalizei as configurações e iniciei a instância.
+
+#### 2. Conectar-se à Instância EC2
+1. Alterei as permissões da chave PEM no terminal local:
+   ```bash
+   chmod 400 minha-chave.pem
+   ```
+2. Conectei-me à instância via SSH:
+   ```bash
+   ssh -i "minha-chave.pem" ec2@IP-da-instancia
+   ```
+   Substituí `minha-chave.pem` pelo nome da chave e `IP-da-instancia` pelo endereço IP público da instância.
+
+#### 3. Preparar o Ambiente na Instância EC2
+1. Atualizei os pacotes do sistema:
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
+2. Instalei o Git, caso não estivesse instalado:
+   ```bash
+   sudo apt install git -y
+   ```
+3. Configurei o firewall da instância para maior segurança:
+   ```bash
+   sudo ufw allow OpenSSH
+   sudo ufw allow 'Nginx Full'
+   sudo ufw enable
+   ```
+
+#### 4. Clonar o Repositório do GitHub
+1. Na instância EC2, clonei o repositório onde o projeto estava versionado:
+   ```bash
+   git clone https://github.com/marcelemontalvao/lablinux.git
+   ```
+2. Acessei o diretório do projeto clonado:
+   ```bash
+   cd lablinux
+   ```
+
+   ## Parte 3: Subindo o Projeto para uma Instância EC2 na AWS
+
+### Pré-requisitos
+1. **Conta AWS**: Certifiquei-me de ter uma conta válida na AWS e acessei o [AWS Console](https://aws.amazon.com/console/) para gerenciar minha conta.
+2. **Chave de Acesso**: Gerei ou utilizei uma chave PEM existente para me conectar à instância EC2.
+3. **Git Instalado na Instância EC2**: Confirmei que o Git estava instalado na instância para clonar o repositório.
+
+### Passos para Configuração
+
+#### 1. Criar e Configurar a Instância EC2
+1. Acessei o console da AWS e naveguei até **EC2**. Cliquei em **Launch Instance**.
+2. Escolhi uma AMI (Amazon Machine Image), como **Amazon Linux 2023 AMI**.
+3. Selecionei o tipo de instância, como **t2.micro**, que é elegível para o Free Tier.
+4. Configurei o armazenamento e o grupo de segurança:
+   - Incluí uma regra para permitir conexões SSH na porta 22.
+   - Adicionei regras para tráfego HTTP/HTTPS nas portas 80 e 443.
+5. Baixei a chave PEM ao criar a instância ou usei uma existente.
+6. Finalizei as configurações e iniciei a instância.
+
+#### 2. Conectar-se à Instância EC2
+1. Alterei as permissões da chave PEM no terminal local:
+   ```bash
+   chmod 400 minha-chave.pem
+   ```
+2. Conectei-me à instância via SSH:
+   ```bash
+   ssh -i "minha-chave.pem" ec2-user@IP-da-instancia
+   ```
+   Substituí `minha-chave.pem` pelo nome da chave e `IP-da-instancia` pelo endereço IP público da instância.
+
+#### 3. Preparar o Ambiente na Instância EC2
+1. Atualizei os pacotes do sistema:
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
+2. Instalei o Git, caso não estivesse instalado:
+   ```bash
+   sudo apt install git -y
+   ```
+3. Configurei o firewall da instância para maior segurança:
+   ```bash
+   sudo ufw allow OpenSSH
+   sudo ufw allow 'Nginx Full'
+   sudo ufw enable
+   ```
+
+#### 4. Clonar o Repositório do GitHub
+1. Na instância EC2, clonei o repositório onde o projeto estava versionado:
+   ```bash
+   git clone https://github.com/marcelemontalvao/lablinux.git
+   ```
+2. Acessei o diretório do projeto clonado:
+   ```bash
+   cd lablinux
+   ```
+
+#### 5. Configurar o Nginx na Instância
+1. Instalei o Nginx, caso ainda não estivesse disponível:
+   ```bash
+   sudo apt install nginx -y
+   ```
+2. Configurei o servidor Nginx para servir os arquivos do projeto. Editei o arquivo de configuração padrão do Nginx:
+   ```bash
+   sudo nano /etc/nginx/sites-available/default
+   ```
+   Atualizei o conteúdo para apontar para o diretório do projeto:
+   ```nginx
+   server {
+       listen 80;
+       server_name _;
+
+       root /home/ec2-user/lablinux;
+       index index.html index.htm;
+
+       location / {
+           try_files $uri $uri/ =404;
+       }
+   }
+   ```
+3. Reiniciei o Nginx para aplicar as configurações:
+   ```bash
+   sudo systemctl restart nginx
+   ```
+#### 6. Automatizar o Script na Instância
+1. Instalei o `crontab` na instância EC2, pois ele não estava pré-instalado:
+   ```bash
+   sudo apt install cron -y
+   ```
+2. Automatizei o script de monitoramento presente no diretório `lablinux` usando o `crontab`.
+3. Editei o crontab para agendar a execução automática do script a cada 5 minutos:
+   ```bash
+   crontab -e
+   ```
+4. Adicionei a seguinte linha no final do arquivo:
+   ```bash
+   */5 * * * * /home/ec2-user/lablinux/scriptnginx.sh
+   ```
+   Substituí o caminho pelo caminho correto onde o script estava salvo.
+5. Salvei o arquivo e verifiquei a configuração:
+   ```bash
+   crontab -l
+   ```
+
+#### 6. Testar o Setup
+1. No navegador, acessei o IP público da instância EC2 para verificar se o projeto estava funcionando corretamente:
+   ```
+   http://35.175.142.105
+   ```
+![image](https://github.com/user-attachments/assets/cd2e4fdf-88e1-4ec1-87e8-fdf6cf228050)
